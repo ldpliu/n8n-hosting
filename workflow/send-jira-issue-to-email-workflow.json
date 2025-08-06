@@ -1,0 +1,298 @@
+{
+  "name": "jira-status",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        400
+      ],
+      "id": "94c4b64a-0b31-45f1-bcb9-e46a84fcf026",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const arr = [];\nfor (const item of $input.all()) {\n  arr.push(`https://issues.redhat.com/browse/${item.json.key}`);\n}\nconst lines = arr.map((url, index) => `${index + 1}. ${url}`);\nconst outputString = \"no tag stories:\\n\" + lines.join('\\n');\n\nreturn [{\n  json: {\n    stories: outputString\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        224
+      ],
+      "id": "5cc223b9-249c-47f7-a5f5-b2c44b441c93",
+      "name": "Format Stories"
+    },
+    {
+      "parameters": {
+        "jiraVersion": "serverPat",
+        "operation": "getAll",
+        "limit": 5,
+        "options": {
+          "jql": "component = \"Global Hub\" AND type = Bug AND Severity in (Blocker,Critical,Important) AND status != Closed"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        512,
+        432
+      ],
+      "id": "8605b07e-0cd2-4842-8521-f437b9c7a88f",
+      "name": "Get bugs",
+      "alwaysOutputData": true,
+      "credentials": {
+        "jiraSoftwareServerPatApi": {
+          "id": "JsFUZ9tIDeS1QSzI",
+          "name": "Jira SW Server (PAT) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const arr = [];\nfor (const item of $input.all()) {\n  arr.push(`https://issues.redhat.com/browse/${item.json.key}`);\n}\nconst lines = arr.map((url, index) => `${index + 1}. ${url}`);\nconst outputString = \"bugs:\\n\" + lines.join('\\n');\n\nreturn [{\n  json: {\n    bugs: outputString\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        432
+      ],
+      "id": "9984d82c-2c84-4fe7-ab33-82b712fc8cc2",
+      "name": "Format Bugs"
+    },
+    {
+      "parameters": {
+        "sendTo": "daliu@redhat.com",
+        "subject": "Jira issues",
+        "emailType": "text",
+        "message": "={{ $json.bugs }}\n\n{{ $json.stories }}\n\n{{ $json.notCloseStories }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1168,
+        336
+      ],
+      "id": "1357c3ce-97d5-46c2-8e2e-6d3b1036e1db",
+      "name": "Send a message",
+      "webhookId": "33ee6edb-5403-412e-b496-2fc0b519f366",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HKyEfPjG041p1sBk",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        976,
+        336
+      ],
+      "id": "34327120-1ae7-44ed-8fb3-0dbcecc30539",
+      "name": "Merge1",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jiraVersion": "serverPat",
+        "operation": "getAll",
+        "limit": 5,
+        "options": {
+          "jql": "component = \"Global Hub\" AND  (affectedVersion = \"Global Hub 1.6.0\" OR fixVersion  = \"Global Hub 1.6.0\") AND type = Story AND Sprint = 74528  AND (\"Work Type\" is EMPTY OR  \"Story Points\" is EMPTY OR  labels not in (Eng-Status:Green) OR labels not in (QE-Confidence:Green) OR labels not in (QE-Required, QE-NotApplicable, qe-required) OR labels not in (doc-required, doc-not-required) OR labels not in (Train-31))"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        512,
+        224
+      ],
+      "id": "ea068865-68d0-4ef4-91d4-e677737d6dcd",
+      "name": "Get no label stories",
+      "alwaysOutputData": true,
+      "credentials": {
+        "jiraSoftwareServerPatApi": {
+          "id": "JsFUZ9tIDeS1QSzI",
+          "name": "Jira SW Server (PAT) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jiraVersion": "serverPat",
+        "operation": "getAll",
+        "limit": 5,
+        "options": {
+          "jql": "component = \"Global Hub\" AND  (affectedVersion = \"Global Hub 1.6.0\" OR fixVersion  = \"Global Hub 1.6.0\") AND type = Story AND labels in (Train-31) AND status != Closed"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        512,
+        624
+      ],
+      "id": "36794859-d9aa-47dc-baea-06e979fa5705",
+      "name": "not closed stories",
+      "alwaysOutputData": true,
+      "credentials": {
+        "jiraSoftwareServerPatApi": {
+          "id": "JsFUZ9tIDeS1QSzI",
+          "name": "Jira SW Server (PAT) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const arr = [];\nfor (const item of $input.all()) {\n  arr.push(`https://issues.redhat.com/browse/${item.json.key}`);\n}\nconst lines = arr.map((url, index) => `${index + 1}. ${url}`);\nconst outputString = \"not closed stories:\\n\" + lines.join('\\n');\n\nreturn [{\n  json: {\n    notCloseStories: outputString\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        624
+      ],
+      "id": "9a031be3-406e-4be2-b11d-703a9ba78b95",
+      "name": "Format stores"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get no label stories",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get bugs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "not closed stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get bugs": {
+      "main": [
+        [
+          {
+            "node": "Format Bugs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Stories": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Bugs": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get no label stories": {
+      "main": [
+        [
+          {
+            "node": "Format Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "not closed stories": {
+      "main": [
+        [
+          {
+            "node": "Format stores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format stores": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "821880d9-deba-44f4-9cbc-b2604463c67e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2657ec3d058b77dde06bd069e5aa232308e6dbbb825ca46c14e60d9467148b4c"
+  },
+  "id": "IAgolMB80BHZucXt",
+  "tags": []
+}
