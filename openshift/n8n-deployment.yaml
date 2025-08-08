@@ -20,9 +20,9 @@ spec:
           image: n8nio/n8n:latest
           env:
             - name: N8N_EDITOR_BASE_URL
-              value: https://n8n-n8n.apps.obs-hub-of-hubs-aws-418-sno-v9w92.scale.red-chesterfield.com
+              value: https://n8n-n8n.apps.obs-hub-of-hubs-aws-418-sno-l29pl.scale.red-chesterfield.com
             - name: WEBHOOK_URL
-              value: https://n8n-n8n.apps.obs-hub-of-hubs-aws-418-sno-v9w92.scale.red-chesterfield.com
+              value: https://n8n-n8n.apps.obs-hub-of-hubs-aws-418-sno-l29pl.scale.red-chesterfield.com
             - name: DB_TYPE
               value: postgresdb
             - name: DB_POSTGRESDB_HOST
